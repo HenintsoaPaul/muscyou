@@ -1,145 +1,138 @@
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:muscyou/data/local/model/user.dart';
+import 'package:muscyou/data/local/repository/user_repository.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends HookConsumerWidget {
   const LoginScreen({super.key});
 
   static String name = "login";
-
   static String path = "/login";
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
-}
-
-class _LoginScreenState extends State<LoginScreen>
-    with TickerProviderStateMixin {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-
-  late AnimationController _fadeController;
-  late AnimationController _slideController;
-  late AnimationController _pulseController;
-  late AnimationController _rippleController;
-
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
-  late Animation<double> _pulseAnimation;
-  late Animation<double> _scaleAnimation;
-
-  bool _isPasswordVisible = false;
-  bool _isSubmitting = false;
-  final FocusNode _emailFocus = FocusNode();
-  final FocusNode _passwordFocus = FocusNode();
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Fade in animation for the entire screen
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
-      vsync: this,
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeOutCubic),
-    );
-
-    // Slide up animation for form
-    _slideController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
-      vsync: this,
-    );
-    _slideAnimation =
-        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-          CurvedAnimation(parent: _slideController, curve: Curves.elasticOut),
-        );
-
-    // Pulsing background gradient
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 3000),
-      vsync: this,
-    )..repeat(reverse: true);
-    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-
-    // Ripple effect controller
-    _rippleController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _rippleController, curve: Curves.easeOutCubic),
-    );
-
-    // Start animations
-    Future.delayed(const Duration(milliseconds: 300), () {
-      _fadeController.forward();
-      _slideController.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _fadeController.dispose();
-    _slideController.dispose();
-    _pulseController.dispose();
-    _rippleController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _emailFocus.dispose();
-    _passwordFocus.dispose();
-    super.dispose();
-  }
-
-  void _triggerRipple() {
-    _rippleController.forward(from: 0.0);
-  }
-
-  Future<void> _handleLogin() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isSubmitting = true);
-      _triggerRipple();
-
-      // Simulate login delay
-      await Future.delayed(const Duration(seconds: 2));
-
-      setState(() => _isSubmitting = false);
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Login successful! 🚀')));
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final size = MediaQuery.of(context).size;
     final theme = Theme.of(context);
+
+    // Form key
+    final formKey = useMemoized(() => GlobalKey<FormState>());
+    // Controllers
+    final emailController = useTextEditingController();
+    final passwordController = useTextEditingController();
+    // FocusNodes
+    final emailFocus = useFocusNode();
+    final passwordFocus = useFocusNode();
+    // Animation controllers with vsync handled internally by useAnimationController hook
+    final fadeController = useAnimationController(
+      duration: const Duration(milliseconds: 1200),
+    );
+    final slideController = useAnimationController(
+      duration: const Duration(milliseconds: 1000),
+    );
+    final pulseController = useAnimationController(
+      duration: const Duration(milliseconds: 3000),
+    );
+    final rippleController = useAnimationController(
+      duration: const Duration(milliseconds: 800),
+    );
+
+    // Animations from controllers
+    final fadeAnimation = useAnimation(
+      Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: fadeController, curve: Curves.easeOutCubic),
+      ),
+    );
+    final slideAnimation = useAnimation(
+      Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+        CurvedAnimation(parent: slideController, curve: Curves.elasticOut),
+      ),
+    );
+    final pulseAnimation = useAnimation(
+      Tween<double>(begin: 0.8, end: 1.0).animate(
+        CurvedAnimation(parent: pulseController, curve: Curves.easeInOut),
+      ),
+    );
+    final scaleAnimation = useAnimation(
+      Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: rippleController, curve: Curves.easeOutCubic),
+      ),
+    );
+
+    // State hooks
+    final isPasswordVisible = useState(false);
+    final isSubmitting = useState(false);
+
+    // Start animations once on widget load
+    useEffect(() {
+      fadeController.forward();
+      slideController.forward();
+      pulseController.repeat(reverse: true);
+      return () {
+        fadeController.dispose();
+        slideController.dispose();
+        pulseController.dispose();
+        rippleController.dispose();
+      };
+    }, []);
+
+    void triggerRipple() {
+      rippleController.forward(from: 0.0);
+    }
+
+    Future<void> handleLogin() async {
+      try {
+        if (formKey.currentState!.validate()) {
+          isSubmitting.value = true;
+          triggerRipple();
+
+          String email = emailController.text;
+          String password = passwordController.text;
+
+          // Make user wait so that loading icon shows properly
+          await Future.delayed(const Duration(seconds: 1));
+          final repo = ref.read(userRepositoryProvider);
+          User? usr = await repo.authenticateUser(email, password);
+
+          String msg = 'Unkown 😢';
+          if (usr != null) {
+            msg = 'Login successful! 🚀';
+          }
+
+          isSubmitting.value = false;
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating),
+            );
+          }
+        }
+      } finally {
+        isSubmitting.value = false;
+      }
+    }
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       body: AnimatedBuilder(
         animation: Listenable.merge([
-          _fadeController,
-          _pulseController,
-          _rippleController,
+          fadeController,
+          pulseController,
+          rippleController,
         ]),
         builder: (context, child) {
           return Stack(
             children: [
               // Animated gradient background with pulse
-              _buildAnimatedBackground(size, theme),
+              _buildAnimatedBackground(size, theme, pulseAnimation),
 
               // Ripple effect overlay
-              if (_rippleController.value > 0) _buildRippleEffect(size),
+              if (rippleController.value > 0)
+                _buildRippleEffect(size, scaleAnimation),
 
               // Main content
               SafeArea(
                 child: FadeTransition(
-                  opacity: _fadeAnimation,
+                  opacity: fadeController,
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(24.0),
                     child: ConstrainedBox(
@@ -149,23 +142,38 @@ class _LoginScreenState extends State<LoginScreen>
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             const Spacer(flex: 2),
-
-                            // Logo with morphing shape
                             _buildAnimatedLogo(theme),
-
                             const SizedBox(height: 32),
-
-                            // Title with animated text reveal
-                            _buildAnimatedTitle(theme),
-
+                            _buildAnimatedTitle(theme, fadeController),
                             const SizedBox(height: 48),
-
-                            // Form with slide-up animation
-                            SlideTransition(
-                              position: _slideAnimation,
-                              child: _buildLoginForm(theme),
+                            // SlideTransition(
+                            //   position: slideAnimation,
+                            //   child: _buildLoginForm(
+                            //     theme,
+                            //     formKey,
+                            //     emailController,
+                            //     passwordController,
+                            //     emailFocus,
+                            //     passwordFocus,
+                            //     isPasswordVisible,
+                            //     isSubmitting,
+                            //     () => isPasswordVisible.value = !isPasswordVisible.value,
+                            //     handleLogin,
+                            //   ),
+                            // ),
+                            _buildLoginForm(
+                              theme,
+                              formKey,
+                              emailController,
+                              passwordController,
+                              emailFocus,
+                              passwordFocus,
+                              isPasswordVisible,
+                              isSubmitting,
+                              () => isPasswordVisible.value =
+                                  !isPasswordVisible.value,
+                              handleLogin,
                             ),
-
                             const Spacer(flex: 3),
                           ],
                         ),
@@ -181,14 +189,18 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _buildAnimatedBackground(Size size, ThemeData theme) {
+  Widget _buildAnimatedBackground(
+    Size size,
+    ThemeData theme,
+    double pulseValue,
+  ) {
     return Container(
       width: size.width,
       height: size.height,
       decoration: BoxDecoration(
         gradient: RadialGradient(
           center: Alignment.topLeft,
-          radius: _pulseAnimation.value * 1.5,
+          radius: pulseValue * 1.5,
           colors: [
             theme.colorScheme.primary.withOpacity(0.12),
             theme.colorScheme.secondary.withOpacity(0.08),
@@ -201,7 +213,7 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _buildRippleEffect(Size size) {
+  Widget _buildRippleEffect(Size size, double scaleValue) {
     return Positioned(
       top: size.height * 0.6,
       left: size.width / 2,
@@ -210,7 +222,7 @@ class _LoginScreenState extends State<LoginScreen>
         child: SizedBox(
           width: 300,
           height: 300,
-          child: CustomPaint(painter: RipplePainter(_scaleAnimation.value)),
+          child: CustomPaint(painter: RipplePainter(scaleValue)),
         ),
       ),
     );
@@ -261,7 +273,10 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _buildAnimatedTitle(ThemeData theme) {
+  Widget _buildAnimatedTitle(
+    ThemeData theme,
+    AnimationController fadeController,
+  ) {
     const title = 'Welcome Back';
     const subtitle = 'Sign in to continue your journey';
 
@@ -282,37 +297,50 @@ class _LoginScreenState extends State<LoginScreen>
           ),
         ),
         const SizedBox(height: 8),
-        AnimatedOpacity(
-          opacity: _fadeController.value,
-          duration: const Duration(milliseconds: 800),
-          child: Text(
-            subtitle,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            textAlign: TextAlign.center,
-          ),
+        AnimatedBuilder(
+          animation: fadeController,
+          builder: (context, child) {
+            return Opacity(
+              opacity: fadeController.value,
+              child: Text(
+                subtitle,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            );
+          },
         ),
       ],
     );
   }
 
-  Widget _buildLoginForm(ThemeData theme) {
+  Widget _buildLoginForm(
+    ThemeData theme,
+    GlobalKey<FormState> formKey,
+    TextEditingController emailController,
+    TextEditingController passwordController,
+    FocusNode emailFocus,
+    FocusNode passwordFocus,
+    ValueNotifier<bool> isPasswordVisible,
+    ValueNotifier<bool> isSubmitting,
+    VoidCallback togglePasswordVisibility,
+    Future<void> Function() handleLogin,
+  ) {
     return Card(
       elevation: 0,
       color: theme.colorScheme.surfaceVariant.withOpacity(0.4),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        // padding: const EdgeBoxInsets.symmetric(horizontal: 24, vertical: 32),
         child: Form(
-          key: _formKey,
+          key: formKey,
           child: Column(
             children: [
-              // Email Field with floating label animation
               _buildAnimatedTextField(
-                controller: _emailController,
-                focusNode: _emailFocus,
+                controller: emailController,
+                focusNode: emailFocus,
                 label: 'Email',
                 hint: 'you@example.com',
                 icon: Icons.mail_outline,
@@ -329,17 +357,14 @@ class _LoginScreenState extends State<LoginScreen>
                   return null;
                 },
               ),
-
               const SizedBox(height: 20),
-
-              // Password Field with visibility toggle
               _buildAnimatedTextField(
-                controller: _passwordController,
-                focusNode: _passwordFocus,
+                controller: passwordController,
+                focusNode: passwordFocus,
                 label: 'Password',
                 hint: '••••••••',
                 icon: Icons.lock_outline,
-                obscureText: !_isPasswordVisible,
+                obscureText: !isPasswordVisible.value,
                 keyboardType: TextInputType.visiblePassword,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -354,21 +379,16 @@ class _LoginScreenState extends State<LoginScreen>
                   icon: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
                     child: Icon(
-                      _isPasswordVisible
+                      isPasswordVisible.value
                           ? Icons.visibility
                           : Icons.visibility_off,
-                      key: ValueKey(_isPasswordVisible),
+                      key: ValueKey(isPasswordVisible.value),
                     ),
                   ),
-                  onPressed: () {
-                    setState(() => _isPasswordVisible = !_isPasswordVisible);
-                  },
+                  onPressed: togglePasswordVisibility,
                 ),
               ),
-
               const SizedBox(height: 16),
-
-              // Forgot password link
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
@@ -379,11 +399,8 @@ class _LoginScreenState extends State<LoginScreen>
                   ),
                 ),
               ),
-
               const SizedBox(height: 24),
-
-              // Login Button with loading state and morphing shape
-              _buildLoginButton(theme),
+              _buildLoginButton(theme, isSubmitting.value, handleLogin),
             ],
           ),
         ),
@@ -443,16 +460,20 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _buildLoginButton(ThemeData theme) {
+  Widget _buildLoginButton(
+    ThemeData theme,
+    bool isSubmitting,
+    VoidCallback onPressed,
+  ) {
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(_isSubmitting ? 28 : 16),
+          borderRadius: BorderRadius.circular(isSubmitting ? 28 : 16),
           gradient: LinearGradient(
-            colors: _isSubmitting
+            colors: isSubmitting
                 ? [theme.colorScheme.primary, theme.colorScheme.primary]
                 : [theme.colorScheme.primary, theme.colorScheme.secondary],
           ),
@@ -467,10 +488,10 @@ class _LoginScreenState extends State<LoginScreen>
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(_isSubmitting ? 28 : 16),
-            onTap: _isSubmitting ? null : _handleLogin,
+            borderRadius: BorderRadius.circular(isSubmitting ? 28 : 16),
+            onTap: isSubmitting ? null : onPressed,
             child: Center(
-              child: _isSubmitting
+              child: isSubmitting
                   ? const SizedBox(
                       width: 24,
                       height: 24,

@@ -9,6 +9,7 @@ final userRepositoryProvider = Provider((_) => UserRepository());
 class UserRepository {
   static const _table = 'users';
 
+  /// Returns ID of last inserted row
   Future<int> insertUser(User user) async {
     final db = await LocalDbHelper.instance.database;
     return await db.insert(_table, user.toMap());
