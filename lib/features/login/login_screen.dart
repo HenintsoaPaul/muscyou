@@ -25,12 +25,10 @@ class LoginScreen extends HookConsumerWidget {
     // FocusNodes
     final emailFocus = useFocusNode();
     final passwordFocus = useFocusNode();
+
     // Animation controllers with vsync handled internally by useAnimationController hook
     final fadeController = useAnimationController(
       duration: const Duration(milliseconds: 1200),
-    );
-    final slideController = useAnimationController(
-      duration: const Duration(milliseconds: 1000),
     );
     final pulseController = useAnimationController(
       duration: const Duration(milliseconds: 3000),
@@ -40,16 +38,6 @@ class LoginScreen extends HookConsumerWidget {
     );
 
     // Animations from controllers
-    final fadeAnimation = useAnimation(
-      Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: fadeController, curve: Curves.easeOutCubic),
-      ),
-    );
-    final slideAnimation = useAnimation(
-      Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-        CurvedAnimation(parent: slideController, curve: Curves.elasticOut),
-      ),
-    );
     final pulseAnimation = useAnimation(
       Tween<double>(begin: 0.8, end: 1.0).animate(
         CurvedAnimation(parent: pulseController, curve: Curves.easeInOut),
@@ -68,13 +56,9 @@ class LoginScreen extends HookConsumerWidget {
     // Start animations once on widget load
     useEffect(() {
       fadeController.forward();
-      slideController.forward();
       pulseController.repeat(reverse: true);
       return () {
-        // fadeController.dispose();
-        // slideController.dispose();
-        // pulseController.dispose();
-        // rippleController.dispose();
+        // No need to dispose animations
       };
     }, []);
 
@@ -142,25 +126,16 @@ class LoginScreen extends HookConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             const Spacer(flex: 2),
+
+                            /// Logo
                             _buildAnimatedLogo(theme),
                             const SizedBox(height: 32),
+
+                            /// Title
                             _buildAnimatedTitle(theme, fadeController),
                             const SizedBox(height: 48),
-                            // SlideTransition(
-                            //   position: slideAnimation,
-                            //   child: _buildLoginForm(
-                            //     theme,
-                            //     formKey,
-                            //     emailController,
-                            //     passwordController,
-                            //     emailFocus,
-                            //     passwordFocus,
-                            //     isPasswordVisible,
-                            //     isSubmitting,
-                            //     () => isPasswordVisible.value = !isPasswordVisible.value,
-                            //     handleLogin,
-                            //   ),
-                            // ),
+
+                            /// Form
                             _buildLoginForm(
                               theme,
                               formKey,
