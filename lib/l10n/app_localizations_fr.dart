@@ -10,4 +10,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get hello => 'Bonjour';
+
+  @override
+  String get authFailure => 'Failed to authenticate';
 }

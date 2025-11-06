@@ -1,5 +1,9 @@
 {
   "@@locale": "en",
   "hello": "Hello",
-  "@hello": {}
+  "@hello": {},
+  "authFailure": "Failed to authenticate",
+  "@authFailure": {
+    "comment": "Message to display on authentication failures."
+  }
 }

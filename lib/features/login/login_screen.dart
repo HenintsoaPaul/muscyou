@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:muscyou/data/local/model/user.dart';
-import 'package:muscyou/data/local/repository/user_repository.dart';
+import 'package:muscyou/features/login/auth_exception.dart';
+import 'package:muscyou/features/login/auth_state.dart';
+import 'package:muscyou/l10n/app_localizations.dart';
 
 class LoginScreen extends HookConsumerWidget {
   const LoginScreen({super.key});
@@ -14,6 +15,7 @@ class LoginScreen extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final size = MediaQuery.of(context).size;
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     // Form key
     final formKey = useMemoized(() => GlobalKey<FormState>());
@@ -69,10 +71,10 @@ class LoginScreen extends HookConsumerWidget {
       slideController.forward();
       pulseController.repeat(reverse: true);
       return () {
-        fadeController.dispose();
-        slideController.dispose();
-        pulseController.dispose();
-        rippleController.dispose();
+        // fadeController.dispose();
+        // slideController.dispose();
+        // pulseController.dispose();
+        // rippleController.dispose();
       };
     }, []);
 
@@ -91,23 +93,21 @@ class LoginScreen extends HookConsumerWidget {
 
           // Make user wait so that loading icon shows properly
           await Future.delayed(const Duration(seconds: 1));
-          final repo = ref.read(userRepositoryProvider);
-          User? usr = await repo.authenticateUser(email, password);
-
-          String msg = 'Unkown 😢';
-          if (usr != null) {
-            msg = 'Login successful! 🚀';
-          }
-
-          isSubmitting.value = false;
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating),
-            );
+          try {
+            await ref.read(authProvider.notifier).authenticate(email, password);
+          } on AuthException catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(e.message(l10n)),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
           }
         }
       } finally {
-        isSubmitting.value = false;
+        if (context.mounted) isSubmitting.value = false;
       }
     }
 
