@@ -9,6 +9,7 @@ import 'package:muscyou/l10n/app_localizations.dart';
 import 'package:muscyou/l10n/locale_provider.dart';
 import 'package:muscyou/router/router.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:talker_riverpod_logger/talker_riverpod_logger.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,7 +20,9 @@ void main() {
     databaseFactory = databaseFactoryFfi;
   }
 
-  runApp(ProviderScope(child: MainApp()));
+  runApp(
+    ProviderScope(observers: [TalkerRiverpodObserver()], child: MainApp()),
+  );
 }
 
 class MainApp extends HookConsumerWidget {
