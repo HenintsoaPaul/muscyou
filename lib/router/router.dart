@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:muscyou/features/home/home_screen.dart';
-import 'package:muscyou/features/login/auth_state.dart';
-import 'package:muscyou/features/login/login_screen.dart';
+import 'package:muscyou/features/dashboard/dashboard_screen.dart';
 import 'package:muscyou/l10n/locale_provider.dart';
 import 'package:muscyou/router/routes.dart';
 
@@ -12,7 +10,6 @@ class _RouterRefreshNotifier extends ChangeNotifier {
   _RouterRefreshNotifier(Ref ref) {
     // listen to dependencies change here...
     ref.listen(localeProvider, (_, _) => notifyListeners());
-    ref.listen(authProvider, (_, _) => notifyListeners());
   }
 }
 
@@ -25,18 +22,20 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   // On init
   // final initialLocation = LoginScreen.path;
-  final initialLocation = HomeScreen.path;
+  final initialLocation = DashboardScreen.path;
 
   // On each redirection
   String? redirectFn(BuildContext context, GoRouterState state) {
-    final loc = state.matchedLocation;
+    // TODO: router redirection logic
 
-    final authenticated = ref.read(authProvider).isLoggedIn;
+    // final loc = state.matchedLocation;
 
-    final loggingIn = loc == LoginScreen.path;
+    // final authenticated = ref.read(authProvider).isLoggedIn;
 
-    if (!authenticated && !loggingIn) return LoginScreen.path;
-    if (authenticated && loggingIn) return HomeScreen.path;
+    // final loggingIn = loc == LoginScreen.path;
+
+    // if (!authenticated && !loggingIn) return LoginScreen.path;
+    // if (authenticated && loggingIn) return HomeScreen.path;
 
     return null;
   }
