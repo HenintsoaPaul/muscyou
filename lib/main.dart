@@ -1,17 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:muscyou/core/theme.dart';
-import 'package:muscyou/l10n/app_localizations.dart';
-import 'package:muscyou/l10n/locale_provider.dart';
-import 'package:muscyou/router/router.dart';
+import 'data/services/hive_service.dart';
+import 'data/repositories/local_repository.dart'; // Import to register provider override if needed, here just needed for HiveService
+import 'core/theme.dart';
 
-void main() {
-  runApp(ProviderScope(child: MainApp()));
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/app_localizations.dart';
+import 'l10n/locale_provider.dart';
+import 'router/router.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final hiveService = HiveService();
+  await hiveService.init();
+
+  runApp(
+    ProviderScope(
+      overrides: [hiveServiceProvider.overrideWithValue(hiveService)],
+      child: const MuscYouApp(),
+    ),
+  );
 }
 
-class MainApp extends HookConsumerWidget {
-  const MainApp({super.key});
+class MuscYouApp extends ConsumerWidget {
+  const MuscYouApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -19,9 +32,12 @@ class MainApp extends HookConsumerWidget {
     final locale = ref.watch(localeProvider);
 
     return MaterialApp.router(
+      title: 'MuscYou',
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
-      theme: muscyouTheme,
       localizationsDelegates: [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

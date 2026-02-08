@@ -100,6 +100,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hello'**
   String get hello;
+
+  /// No description provided for @authFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to authenticate'**
+  String get authFailure;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

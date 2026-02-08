@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:muscyou/features/home/home_screen.dart';
-import 'package:muscyou/features/login/login_screen.dart';
+import 'package:muscyou/features/dashboard/dashboard_screen.dart';
 import 'package:muscyou/l10n/locale_provider.dart';
 import 'package:muscyou/router/routes.dart';
 
@@ -22,8 +21,8 @@ final routerProvider = Provider<GoRouter>((ref) {
   final routes = ref.read(routesProvider);
 
   // On init
-  final initialLocation = LoginScreen.path;
-  // final initialLocation = HomeScreen.path;
+  // final initialLocation = LoginScreen.path;
+  final initialLocation = DashboardScreen.path;
 
   // On each redirection
   String? redirectFn(BuildContext context, GoRouterState state) {
