@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -187,7 +186,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       position: _slideAnimation,
       child: Card(
         elevation: 0,
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.6),
+        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.6),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: Container(
           padding: const EdgeInsets.all(24),
@@ -197,7 +196,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                theme.colorScheme.surfaceVariant.withOpacity(0.7),
+                theme.colorScheme.surfaceContainerHighest.withOpacity(0.7),
                 theme.colorScheme.surface,
               ],
             ),
@@ -261,7 +260,6 @@ class ConfettiPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..style = PaintingStyle.fill;
-    final random = List.generate(12, (i) => i);
 
     for (int i = 0; i < 12; i++) {
       final t = (progress + i * 0.08) % 1.0;
