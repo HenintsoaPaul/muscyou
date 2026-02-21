@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-
 import 'package:go_router/go_router.dart';
 import '../features/session/timer_provider.dart';
 
@@ -18,7 +17,7 @@ class MainScaffold extends ConsumerWidget {
         children: [
           navigationShell,
 
-          // Global Timer Overlay
+          // Global Timer Overlay (smaller, cleaner)
           if (timerState.isRunning)
             Positioned(
               top: MediaQuery.of(context).padding.top + 8,
@@ -58,19 +57,19 @@ class MainScaffold extends ConsumerWidget {
         },
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: 'Dashboard',
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.play_arrow_outlined),
+            selectedIcon: Icon(Icons.play_arrow),
+            label: 'Session',
           ),
           NavigationDestination(
             icon: Icon(Icons.fitness_center_outlined),
             selectedIcon: Icon(Icons.fitness_center),
             label: 'Exercises',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: 'Settings',
           ),
         ],
       ),

@@ -1,15 +1,45 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../../data/models/exercise.dart';
+import '../home/performance_provider.dart';
+import 'exercise_form.dart';
+import 'exercises_provider.dart';
 
-class ExerciseDetailSheet extends StatelessWidget {
+class ExerciseDetailSheet extends ConsumerWidget {
   final Exercise exercise;
 
   const ExerciseDetailSheet({super.key, required this.exercise});
 
+  void _showEditSheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: ExerciseForm(
+          initialExercise: exercise,
+          onSave: (name, description) {
+            final updated = exercise.copyWith(
+              name: name,
+              description: description,
+            );
+            ref.read(exercisesProvider.notifier).updateExercise(updated);
+          },
+        ),
+      ),
+    );
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    
+    final performanceData = ref.watch(performanceProvider);
+    final history = performanceData.exerciseProgress[exercise.name] ?? [];
+
     return DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.6,
@@ -31,15 +61,35 @@ class ExerciseDetailSheet extends StatelessWidget {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.4),
+                    color: theme.colorScheme.onSurfaceVariant.withValues(
+                      alpha: 0.4,
+                    ),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
-              Text(
-                exercise.name,
-                style: theme.textTheme.headlineMedium,
-                textAlign: TextAlign.center,
+              Stack(
+                children: [
+                  Align(
+                    alignment: Alignment.center,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 48.0),
+                      child: Text(
+                        exercise.name,
+                        style: theme.textTheme.headlineMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: IconButton(
+                      icon: const Icon(Icons.edit_outlined),
+                      onPressed: () => _showEditSheet(context, ref),
+                    ),
+                  ),
+                ],
               ),
               if (exercise.description != null) ...[
                 const SizedBox(height: 8),
@@ -50,27 +100,38 @@ class ExerciseDetailSheet extends StatelessWidget {
                 ),
               ],
               const SizedBox(height: 24),
-              
+
+              if (history.isNotEmpty) ...[
+                Text(
+                  'Progress (${history.first.label})',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildProgressChart(theme, history),
+                const SizedBox(height: 24),
+              ],
+
               _DetailRow(
                 label: 'Expected Duration',
-                value: exercise.durationExpected != null 
-                    ? '${exercise.durationExpected}s' 
+                value: exercise.durationExpected != null
+                    ? '${exercise.durationExpected}s'
                     : 'Not set',
                 icon: Icons.timer_outlined,
               ),
               _DetailRow(
                 label: 'Expected Reps',
-                value: exercise.repetitionsExpected != null 
-                    ? '${exercise.repetitionsExpected}' 
+                value: exercise.repetitionsExpected != null
+                    ? '${exercise.repetitionsExpected}'
                     : 'Not set',
                 icon: Icons.repeat,
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               FilledButton.icon(
                 onPressed: () {
-                  // Add to session logic would go here
                   Navigator.pop(context, 'add');
                 },
                 icon: const Icon(Icons.add),
@@ -80,6 +141,66 @@ class ExerciseDetailSheet extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildProgressChart(ThemeData theme, List<ExerciseProgress> history) {
+    return Container(
+      height: 150,
+      padding: const EdgeInsets.only(right: 16, top: 16, bottom: 8),
+      child: LineChart(
+        LineChartData(
+          lineBarsData: [
+            LineChartBarData(
+              spots: history.asMap().entries.map((entry) {
+                return FlSpot(entry.key.toDouble(), entry.value.value);
+              }).toList(),
+              isCurved: true,
+              color: theme.colorScheme.primary,
+              barWidth: 3,
+              isStrokeCapRound: true,
+              dotData: const FlDotData(show: true),
+              belowBarData: BarAreaData(
+                show: true,
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              ),
+            ),
+          ],
+          titlesData: FlTitlesData(
+            show: true,
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                interval: 1,
+                getTitlesWidget: (value, meta) {
+                  final index = value.toInt();
+                  if (index < 0 || index >= history.length) {
+                    return const SizedBox();
+                  }
+                  return Text(
+                    DateFormat('Md').format(history[index].date),
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontSize: 10,
+                    ),
+                  );
+                },
+              ),
+            ),
+            leftTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+          ),
+          gridData: const FlGridData(show: false),
+          borderData: FlBorderData(show: false),
+        ),
+      ),
     );
   }
 }
