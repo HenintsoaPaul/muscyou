@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../dashboard/dashboard_provider.dart';
+import 'performance_provider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -72,6 +74,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final dashboardState = ref.watch(dashboardProvider);
+    final performanceData = ref.watch(performanceProvider);
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -143,6 +146,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               ),
                             ),
                           ],
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // Performance Section
+                        Text(
+                          'Weekly Activity',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildWeeklyChart(
+                          theme,
+                          performanceData.weeklyActivity,
                         ),
 
                         const SizedBox(height: 32),
@@ -231,6 +249,79 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
+  Widget _buildWeeklyChart(
+    ThemeData theme,
+    List<DailyActivity> weeklyActivity,
+  ) {
+    return Container(
+      height: 200,
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: BarChart(
+        BarChartData(
+          alignment: BarChartAlignment.spaceAround,
+          maxY: 5,
+          barTouchData: BarTouchData(enabled: false),
+          titlesData: FlTitlesData(
+            show: true,
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, meta) {
+                  final index = value.toInt();
+                  if (index < 0 || index >= weeklyActivity.length) {
+                    return const SizedBox();
+                  }
+                  final date = weeklyActivity[index].date;
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      DateFormat('E').format(date)[0],
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            leftTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+          ),
+          gridData: const FlGridData(show: false),
+          borderData: FlBorderData(show: false),
+          barGroups: weeklyActivity.asMap().entries.map((entry) {
+            return BarChartGroupData(
+              x: entry.key,
+              barRods: [
+                BarChartRodData(
+                  toY: entry.value.sessionCount.toDouble(),
+                  color: theme.colorScheme.primary,
+                  width: 16,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(4),
+                  ),
+                ),
+              ],
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
   Widget _buildAnimatedBackground(Size size, ThemeData theme) {
     return AnimatedContainer(
       duration: const Duration(seconds: 4),
@@ -241,8 +332,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           center: Alignment.topRight,
           radius: 1.8,
           colors: [
-            theme.colorScheme.primary.withOpacity(0.08),
-            theme.colorScheme.secondary.withOpacity(0.05),
+            theme.colorScheme.primary.withValues(alpha: 0.08),
+            theme.colorScheme.secondary.withValues(alpha: 0.05),
             theme.colorScheme.surface,
           ],
         ),
@@ -292,7 +383,7 @@ class ConfettiPainter extends CustomPainter {
       final rotation = t * 6.28;
       final scale = (1 - t) * 0.8 + 0.2;
 
-      final color = colors[i % colors.length].withOpacity(1 - t);
+      final color = colors[i % colors.length].withValues(alpha: 1 - t);
 
       canvas.save();
       canvas.translate(x, y);
@@ -329,7 +420,7 @@ class _SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 0,
-      color: color.withOpacity(0.1),
+      color: color.withValues(alpha: 0.1),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -347,7 +438,7 @@ class _SummaryCard extends StatelessWidget {
             Text(
               title,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: color.withOpacity(0.8),
+                color: color.withValues(alpha: 0.8),
                 fontWeight: FontWeight.bold,
               ),
             ),
