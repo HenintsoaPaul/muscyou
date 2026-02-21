@@ -22,10 +22,12 @@ class ExerciseDetailSheet extends ConsumerWidget {
         ),
         child: ExerciseForm(
           initialExercise: exercise,
-          onSave: (name, description) {
+          onSave: (name, description, repetitionsExpected, durationExpected) {
             final updated = exercise.copyWith(
               name: name,
               description: description,
+              repetitionsExpected: repetitionsExpected,
+              durationExpected: durationExpected,
             );
             ref.read(exercisesProvider.notifier).updateExercise(updated);
           },

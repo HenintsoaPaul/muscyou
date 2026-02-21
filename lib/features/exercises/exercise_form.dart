@@ -3,7 +3,13 @@ import '../../data/models/exercise.dart';
 
 class ExerciseForm extends StatefulWidget {
   final Exercise? initialExercise;
-  final Function(String name, String? description) onSave;
+  final Function(
+    String name,
+    String? description,
+    int? repetitionsExpected,
+    int? durationExpected,
+  )
+  onSave;
 
   const ExerciseForm({super.key, this.initialExercise, required this.onSave});
 
@@ -14,6 +20,8 @@ class ExerciseForm extends StatefulWidget {
 class _ExerciseFormState extends State<ExerciseForm> {
   late final TextEditingController _nameController;
   late final TextEditingController _descController;
+  late final TextEditingController _repsController;
+  late final TextEditingController _durationController;
 
   @override
   void initState() {
@@ -22,12 +30,20 @@ class _ExerciseFormState extends State<ExerciseForm> {
     _descController = TextEditingController(
       text: widget.initialExercise?.description,
     );
+    _repsController = TextEditingController(
+      text: widget.initialExercise?.repetitionsExpected?.toString() ?? '',
+    );
+    _durationController = TextEditingController(
+      text: widget.initialExercise?.durationExpected?.toString() ?? '',
+    );
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _descController.dispose();
+    _repsController.dispose();
+    _durationController.dispose();
     super.dispose();
   }
 
@@ -63,11 +79,42 @@ class _ExerciseFormState extends State<ExerciseForm> {
               border: OutlineInputBorder(),
             ),
           ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _repsController,
+                  decoration: const InputDecoration(
+                    labelText: 'Expected Reps',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: TextField(
+                  controller: _durationController,
+                  decoration: const InputDecoration(
+                    labelText: 'Expected Duration (s)',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 24),
           FilledButton(
             onPressed: () {
               if (_nameController.text.isNotEmpty) {
-                widget.onSave(_nameController.text, _descController.text);
+                widget.onSave(
+                  _nameController.text,
+                  _descController.text,
+                  int.tryParse(_repsController.text),
+                  int.tryParse(_durationController.text),
+                );
                 Navigator.pop(context);
               }
             },

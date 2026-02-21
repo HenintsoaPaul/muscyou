@@ -20,10 +20,12 @@ class ExerciseListScreen extends ConsumerWidget {
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
         child: ExerciseForm(
-          onSave: (name, description) {
+          onSave: (name, description, repetitionsExpected, durationExpected) {
             final newExercise = Exercise.create(
               name: name,
               description: description,
+              repetitionsExpected: repetitionsExpected,
+              durationExpected: durationExpected,
             );
             ref.read(exercisesProvider.notifier).addExercise(newExercise);
           },
