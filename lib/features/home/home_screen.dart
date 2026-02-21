@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:go_router/go_router.dart';
 import '../dashboard/dashboard_provider.dart';
+import '../history/session_history_screen.dart';
+import '../history/session_detail_sheet.dart';
 import 'performance_provider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -166,13 +169,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         const SizedBox(height: 32),
 
                         // Recent Sessions
-                        Text(
-                          'Recent Sessions',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Recent Sessions',
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () =>
+                                  context.push(SessionHistoryScreen.path),
+                              child: const Text('See All'),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 8),
 
                         if (dashboardState.recentSessions.isEmpty)
                           Center(
@@ -231,7 +244,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                   ),
                                   trailing: const Icon(Icons.chevron_right),
                                   onTap: () {
-                                    // View details (not implemented)
+                                    showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      builder: (context) =>
+                                          SessionDetailSheet(session: session),
+                                    );
                                   },
                                 ),
                               );

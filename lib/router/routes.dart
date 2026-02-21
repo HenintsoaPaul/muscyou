@@ -6,6 +6,7 @@ import 'package:muscyou/features/dashboard/dashboard_screen.dart';
 import 'package:muscyou/features/exercises/exercise_list_screen.dart';
 import 'package:muscyou/features/session/active_session_screen.dart';
 import 'package:muscyou/features/settings/settings_screen.dart';
+import 'package:muscyou/features/history/session_history_screen.dart';
 import 'package:muscyou/main_scaffold.dart';
 
 /// Provider
@@ -37,6 +38,15 @@ final routes = <RouteBase>[
     name: SettingsScreen.name,
     builder: (context, state) {
       return const SettingsScreen();
+    },
+  ),
+
+  /// Session History
+  GoRoute(
+    path: SessionHistoryScreen.path,
+    name: SessionHistoryScreen.name,
+    builder: (context, state) {
+      return const SessionHistoryScreen();
     },
   ),
 
